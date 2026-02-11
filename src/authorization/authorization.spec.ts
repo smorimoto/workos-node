@@ -1110,7 +1110,6 @@ describe('Authorization', () => {
       expect(body).toHaveProperty('resource_external_id');
       expect(body).toHaveProperty('resource_type_slug');
     });
-
   });
 
   describe('removeRole', () => {
