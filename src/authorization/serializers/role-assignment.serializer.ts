@@ -3,10 +3,6 @@ import {
   RoleAssignmentResponse,
 } from '../interfaces/role-assignment.interface';
 
-/**
- * Deserialize API response to SDK type
- * Converts snake_case to camelCase
- */
 export const deserializeRoleAssignment = (
   response: RoleAssignmentResponse,
 ): RoleAssignment => ({

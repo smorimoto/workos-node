@@ -3,11 +3,6 @@ import {
   SerializedAssignRoleOptions,
 } from '../interfaces/assign-role-options.interface';
 
-/**
- * Serialize SDK options to API request format
- * Converts camelCase to snake_case
- * Only includes fields that are provided (truthy)
- */
 export const serializeAssignRoleOptions = (
   options: AssignRoleOptions,
 ): SerializedAssignRoleOptions => ({
