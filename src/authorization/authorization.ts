@@ -31,6 +31,14 @@ import {
   AuthorizationResourceResponse,
   CreateAuthorizationResourceOptions,
   UpdateAuthorizationResourceOptions,
+  RoleAssignment,
+  RoleAssignmentResponse,
+  RoleAssignmentList,
+  RoleAssignmentListResponse,
+  ListRoleAssignmentsOptions,
+  AssignRoleOptions,
+  RemoveRoleOptions,
+  RemoveRoleAssignmentOptions,
 } from './interfaces';
 import {
   deserializeEnvironmentRole,
@@ -46,6 +54,9 @@ import {
   deserializeAuthorizationResource,
   serializeCreateResourceOptions,
   serializeUpdateResourceOptions,
+  deserializeRoleAssignment,
+  serializeAssignRoleOptions,
+  serializeRemoveRoleOptions,
 } from './serializers';
 
 export class Authorization {
@@ -275,5 +286,112 @@ export class Authorization {
 
   async deleteResource(resourceId: string): Promise<void> {
     await this.workos.delete(`/authorization/resources/${resourceId}`);
+  }
+
+  /**
+   * List all role assignments for an organization membership
+   *
+   * @param options - Options including organizationMembershipId and pagination
+   * @returns Paginated list of role assignments
+   *
+   * @example
+   * const { data, listMetadata } = await workos.authorization.listRoleAssignments({
+   *   organizationMembershipId: 'om_01HXYZ...',
+   *   limit: 10,
+   * });
+   */
+  async listRoleAssignments(
+    options: ListRoleAssignmentsOptions,
+  ): Promise<RoleAssignmentList> {
+    const { organizationMembershipId, ...queryOptions } = options;
+    const { data } = await this.workos.get<RoleAssignmentListResponse>(
+      `/authorization/organization_memberships/${organizationMembershipId}/role_assignments`,
+      { query: queryOptions },
+    );
+    return {
+      object: 'list',
+      data: data.data.map(deserializeRoleAssignment),
+      listMetadata: {
+        before: data.list_metadata.before,
+        after: data.list_metadata.after,
+      },
+    };
+  }
+
+  /**
+   * Assign a role to an organization membership on a specific resource
+   *
+   * @param options - Options including membership ID, role slug, and resource identification
+   * @returns The created role assignment
+   *
+   * @example By resource ID:
+   * const assignment = await workos.authorization.assignRole({
+   *   organizationMembershipId: 'om_01HXYZ...',
+   *   roleSlug: 'editor',
+   *   resourceId: 'resource_01HXYZ...',
+   * });
+   *
+   * @example By external ID:
+   * const assignment = await workos.authorization.assignRole({
+   *   organizationMembershipId: 'om_01HXYZ...',
+   *   roleSlug: 'editor',
+   *   resourceExternalId: 'doc-123',
+   *   resourceTypeSlug: 'document',
+   * });
+   */
+  async assignRole(options: AssignRoleOptions): Promise<RoleAssignment> {
+    const { data } = await this.workos.post<RoleAssignmentResponse>(
+      `/authorization/organization_memberships/${options.organizationMembershipId}/role_assignments`,
+      serializeAssignRoleOptions(options),
+    );
+    return deserializeRoleAssignment(data);
+  }
+
+  /**
+   * Remove a role assignment by role slug and resource criteria
+   * Use this when you know the role and resource but not the assignment ID
+   *
+   * @param options - Options including membership ID, role slug, and resource identification
+   *
+   * @example By resource ID:
+   * await workos.authorization.removeRole({
+   *   organizationMembershipId: 'om_01HXYZ...',
+   *   roleSlug: 'editor',
+   *   resourceId: 'resource_01HXYZ...',
+   * });
+   *
+   * @example By external ID:
+   * await workos.authorization.removeRole({
+   *   organizationMembershipId: 'om_01HXYZ...',
+   *   roleSlug: 'editor',
+   *   resourceExternalId: 'doc-123',
+   *   resourceTypeSlug: 'document',
+   * });
+   */
+  async removeRole(options: RemoveRoleOptions): Promise<void> {
+    await this.workos.delete(
+      `/authorization/organization_memberships/${options.organizationMembershipId}/role_assignments`,
+      serializeRemoveRoleOptions(options),
+    );
+  }
+
+  /**
+   * Remove a role assignment by its ID
+   * Use this when you have the specific role assignment ID
+   *
+   * @param options - Options including membership ID and role assignment ID
+   *
+   * @example
+   * await workos.authorization.removeRoleAssignment({
+   *   organizationMembershipId: 'om_01HXYZ...',
+   *   roleAssignmentId: 'ra_01HXYZ...',
+   * });
+   */
+  async removeRoleAssignment(
+    options: RemoveRoleAssignmentOptions,
+  ): Promise<void> {
+    await this.workos.delete(
+      `/authorization/organization_memberships/${options.organizationMembershipId}/role_assignments/${options.roleAssignmentId}`,
+    );
   }
 }

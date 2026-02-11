@@ -14,3 +14,8 @@ export * from './create-permission-options.interface';
 export * from './update-permission-options.interface';
 export * from './list-permissions-options.interface';
 export * from './authorization-resource.interface';
+export * from './role-assignment.interface';
+export * from './list-role-assignments-options.interface';
+export * from './assign-role-options.interface';
+export * from './remove-role-options.interface';
+export * from './remove-role-assignment-options.interface';

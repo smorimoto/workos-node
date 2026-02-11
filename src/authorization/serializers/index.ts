@@ -10,3 +10,6 @@ export * from './update-permission-options.serializer';
 export * from './authorization-resource.serializer';
 export * from './create-authorization-resource-options.serializer';
 export * from './update-authorization-resource-options.serializer';
+export * from './role-assignment.serializer';
+export * from './assign-role-options.serializer';
+export * from './remove-role-options.serializer';
