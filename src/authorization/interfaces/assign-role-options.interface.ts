@@ -1,5 +1,4 @@
 export interface AssignRoleOptions {
-    /** The organization membership ID (required, used in URL path) */
   organizationMembershipId: string;
   roleSlug: string;
   resourceId?: string;
