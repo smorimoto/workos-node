@@ -8,7 +8,7 @@ export const deserializeRoleAssignment = (
 ): RoleAssignment => ({
   object: response.object,
   id: response.id,
-  role: response.role, // role.slug doesn't need conversion
+  role: response.role,
   resource: {
     id: response.resource.id,
     externalId: response.resource.external_id,

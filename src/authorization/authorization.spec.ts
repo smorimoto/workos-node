@@ -1010,6 +1010,23 @@ describe('Authorization', () => {
         order: 'desc',
       });
     });
+
+    it('passes before pagination parameter', async () => {
+      fetchOnce(listRoleAssignmentsFixture);
+
+      await workos.authorization.listRoleAssignments({
+        organizationMembershipId: testOrgMembershipId,
+        limit: 10,
+        before: 'ra_cursor456',
+        order: 'asc',
+      });
+
+      expect(fetchSearchParams()).toEqual({
+        limit: '10',
+        before: 'ra_cursor456',
+        order: 'asc',
+      });
+    });
   });
 
   describe('assignRole', () => {
@@ -1038,10 +1055,12 @@ describe('Authorization', () => {
           externalId: 'doc-123',
           resourceTypeSlug: 'document',
         },
+        createdAt: '2024-01-15T09:30:00.000Z',
+        updatedAt: '2024-01-15T09:30:00.000Z',
       });
     });
 
-    it('assigns a role by external ID', async () => {
+    it('assigns a role by external ID & resourceTypeSlug', async () => {
       fetchOnce(roleAssignmentFixture, { status: 201 });
 
       const assignment = await workos.authorization.assignRole({
@@ -1057,9 +1076,11 @@ describe('Authorization', () => {
         resource_type_slug: 'document',
       });
       expect(assignment.resource.externalId).toBe('doc-123');
+      expect(assignment.createdAt).toBe('2024-01-15T09:30:00.000Z');
+      expect(assignment.updatedAt).toBe('2024-01-15T09:30:00.000Z');
     });
 
-    it('only includes provided resource identification fields', async () => {
+    it('body only includes resource_id when resourceId is provided', async () => {
       fetchOnce(roleAssignmentFixture, { status: 201 });
 
       await workos.authorization.assignRole({
@@ -1073,6 +1094,23 @@ describe('Authorization', () => {
       expect(body).not.toHaveProperty('resource_external_id');
       expect(body).not.toHaveProperty('resource_type_slug');
     });
+
+    it('body only includes externalId and typeSlug when provided', async () => {
+      fetchOnce(roleAssignmentFixture, { status: 201 });
+
+      await workos.authorization.assignRole({
+        organizationMembershipId: testOrgMembershipId,
+        roleSlug: 'editor',
+        resourceExternalId: 'doc-123',
+        resourceTypeSlug: 'document',
+      });
+
+      const body = fetchBody();
+      expect(body).not.toHaveProperty('resource_id');
+      expect(body).toHaveProperty('resource_external_id');
+      expect(body).toHaveProperty('resource_type_slug');
+    });
+
   });
 
   describe('removeRole', () => {
@@ -1094,7 +1132,7 @@ describe('Authorization', () => {
       });
     });
 
-    it('removes a role by external ID', async () => {
+    it('removes a role by externalId and resourceTypeSlug', async () => {
       fetchOnce({}, { status: 204 });
 
       await workos.authorization.removeRole({
@@ -1109,6 +1147,37 @@ describe('Authorization', () => {
         resource_external_id: 'doc-123',
         resource_type_slug: 'document',
       });
+    });
+
+    it('query only includes resource_id when resourceId is provided', async () => {
+      fetchOnce(roleAssignmentFixture, { status: 201 });
+
+      await workos.authorization.removeRole({
+        organizationMembershipId: testOrgMembershipId,
+        roleSlug: 'editor',
+        resourceId: testResourceId,
+      });
+
+      const params = fetchSearchParams();
+      expect(params).toHaveProperty('resource_id');
+      expect(params).not.toHaveProperty('resource_external_id');
+      expect(params).not.toHaveProperty('resource_type_slug');
+    });
+
+    it('query only includes externalId and typeSlug when provided', async () => {
+      fetchOnce(roleAssignmentFixture, { status: 201 });
+
+      await workos.authorization.removeRole({
+        organizationMembershipId: testOrgMembershipId,
+        roleSlug: 'editor',
+        resourceExternalId: 'doc-123',
+        resourceTypeSlug: 'document',
+      });
+
+      const params = fetchSearchParams();
+      expect(params).not.toHaveProperty('resource_id');
+      expect(params).toHaveProperty('resource_external_id');
+      expect(params).toHaveProperty('resource_type_slug');
     });
   });
 
